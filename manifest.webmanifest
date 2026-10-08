@@ -1,0 +1,19 @@
+{
+  "name": "Xtore — Cozy Bedding Store",
+  "short_name": "Xtore",
+  "description": "Shop Xtore bedding sets: cotton, linen, gauze, tencel & fleece. Companion app for www.xtore.shop.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#080808",
+  "theme_color": "#080808",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

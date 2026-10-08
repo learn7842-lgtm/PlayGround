@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Xtore — Xtore</title>
+<meta name="description" content="Xtore — Style That Speaks. Shop bedding sets and more. Companion app for www.xtore.shop with cart, saved items and secure checkout.">
+<meta name="theme-color" content="#080808">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+  /* Mirrors the live Xtore storefront theme (xtore-core.css):
+     --b:#080808; --c:#151515; --t:#fff; --m:#999; --o:#ff6900; --bd:#292929 */
+  :root{
+    --bg:#080808; --card:#151515; --ink:#fff; --muted:#999;
+    --line:#292929; --accent:#ff6900; --accent-ink:#000;
+    --accent-soft:#2a1602; --star:#ff8a1a; --fav-on:#ff3b3b;
+    --radius:13px; --btn-radius:8px;
+    --shadow:0 6px 18px -12px rgba(0,0,0,.8);
+    --tab-h:64px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{margin:0; padding:0}
+  body{
+    font-family:Inter,Arial,sans-serif;
+    color:var(--ink); background:#000;
+    min-height:100vh; display:flex; justify-content:center;
+  }
+  .phone{
+    width:100%; max-width:480px; min-height:100vh; background:var(--bg);
+    position:relative; display:flex; flex-direction:column;
+    box-shadow:0 0 80px rgba(0,0,0,.7);
+  }
+  @media(min-width:520px){ .phone{border-left:1px solid var(--line); border-right:1px solid var(--line)} }
+
+  /* Announcement bar — exactly like the store */
+  .promo{
+    background:var(--accent); color:#000; text-align:center;
+    padding:8px 10px; font-size:11px; font-weight:700; letter-spacing:.2px;
+  }
+  header.appbar{
+    position:sticky; top:0; z-index:30; background:#090909f5;
+    border-bottom:1px solid var(--line);
+    padding:10px 14px 8px;
+  }
+  .bar-row{display:flex; align-items:center; gap:10px}
+  .logo img{height:42px; width:auto; display:block}
+  .title{line-height:1.2; display:none}
+  .actions{display:flex; gap:14px; margin-left:auto; align-items:center}
+  .store-act{
+    border:none; background:none; color:var(--ink); font-family:inherit;
+    font-size:13px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:5px;
+    position:relative; padding:6px 2px;
+  }
+  .store-act:hover{color:var(--accent)}
+  .badge{
+    background:var(--accent); color:#000; border-radius:99px; padding:1px 7px;
+    font-size:11px; font-weight:800;
+  }
+  .badge[hidden]{display:none}
+  /* Store-style search: orange field, black button */
+  .search{margin-top:10px; display:flex; background:var(--accent); border:1px solid var(--accent); border-radius:9px; overflow:hidden}
+  .search input{
+    flex:1; min-width:0; background:none; border:0; color:#000;
+    padding:13px 12px; font-size:14px; outline:0; font-family:inherit; font-weight:500;
+  }
+  .search input::placeholder{color:#5a2600}
+  .search button{
+    width:55px; background:#000; border:0; font-weight:700; color:var(--accent);
+    font-size:16px; cursor:pointer; font-family:inherit;
+  }
+  /* Store nav */
+  .store-nav{display:flex; gap:2px; overflow-x:auto; padding:8px 14px 0; border-bottom:1px solid var(--line); background:#090909f5}
+  .store-nav::-webkit-scrollbar{display:none}
+  .store-nav a{
+    flex:none; color:var(--ink); text-decoration:none; font-size:12.5px; font-weight:700;
+    padding:8px 10px; white-space:nowrap;
+  }
+  .store-nav a:hover{color:var(--accent)}
+
+  main{flex:1; padding-bottom:calc(var(--tab-h) + 26px)}
+  .view{display:none; animation:fade .18s ease}
+  .view.active{display:block}
+  @keyframes fade{from{opacity:0; transform:translateY(4px)} to{opacity:1; transform:none}}
+
+  .hero{
+    margin:14px 14px 0; border-radius:var(--radius); overflow:hidden; position:relative;
+    background:linear-gradient(135deg,#0a0a0a 0%,#241000 60%,#572800 100%);
+    border:1px solid var(--line);
+    color:#fff; padding:24px 18px; box-shadow:var(--shadow);
+  }
+  .hero::after{
+    content:""; position:absolute; right:-50px; top:-50px; width:210px; height:210px;
+    background:radial-gradient(circle, rgba(255,105,0,.35) 0 60px, transparent 61px);
+    pointer-events:none;
+  }
+  .hero .kicker{font-size:11px; letter-spacing:2.5px; text-transform:uppercase; color:var(--accent); font-weight:800}
+  .hero h2{margin:8px 0 8px; font-size:30px; line-height:1.08; font-weight:900}
+  .hero p{margin:0 0 14px; font-size:13.5px; color:#ddd; line-height:1.55}
+  .hero .cta-row{display:flex; gap:0; flex-wrap:wrap}
+  .btn{
+    border:none; cursor:pointer; border-radius:var(--btn-radius); font-weight:700; font-size:14px;
+    padding:15px 24px; display:inline-flex; align-items:center; gap:8px; text-decoration:none;
+    font-family:inherit; margin:8px 8px 0 0;
+  }
+  .btn-primary{background:var(--accent); color:#000}
+  .btn-ghost{background:none; color:var(--ink); border:1px solid var(--line)}
+  .btn-ghost:hover{border-color:var(--accent); color:var(--accent)}
+  .btn-dark{background:var(--accent); color:#000}
+  .btn-light{background:#000; color:var(--accent); border:1px solid var(--accent)}
+  .btn-block{width:100%; justify-content:center; margin-left:0; margin-right:0}
+  .btn:disabled{opacity:.5; cursor:default}
+
+  .section{padding:20px 14px 0}
+  .section-head{display:flex; align-items:baseline; gap:10px; margin-bottom:10px}
+  .section-head h3{margin:0; font-size:18px; font-weight:800}
+  .section-head h3 .kick{display:block; font-size:11px; letter-spacing:2px; color:var(--accent); font-weight:800; margin-bottom:4px}
+  .link-btn{
+    margin-left:auto; border:none; background:none; color:var(--accent);
+    font-weight:700; font-size:13px; cursor:pointer; white-space:nowrap; font-family:inherit;
+  }
+  .h-scroll{display:flex; gap:10px; overflow-x:auto; padding-bottom:6px; scroll-snap-type:x mandatory}
+  .h-scroll::-webkit-scrollbar{display:none}
+  .cat-card{
+    scroll-snap-align:start; flex:0 0 132px; border-radius:var(--radius); padding:14px 12px;
+    background:var(--card); border:1px solid var(--line); color:var(--ink);
+    min-height:104px; display:flex; flex-direction:column; justify-content:flex-end; gap:2px;
+    cursor:pointer; text-align:left; font-family:inherit; text-decoration:none;
+  }
+  .cat-card:hover{border-color:var(--accent)}
+  .cat-card b{font-size:13.5px}
+  .cat-card span{font-size:11px; color:var(--muted)}
+  .cat-card .e{font-size:22px}
+
+  .grid{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+  .card{
+    background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+    overflow:hidden; cursor:pointer; display:flex; flex-direction:column; text-align:left;
+    font-family:inherit; padding:0; color:inherit; width:100%; position:relative;
+  }
+  .card:active{transform:scale(.985)}
+  .thumb{position:relative; aspect-ratio:1/1; background:#0d0d0d; overflow:hidden}
+  .thumb img{width:100%; height:100%; object-fit:cover; display:block}
+  .pill{
+    position:absolute; left:8px; top:8px; background:#090909bf; color:var(--accent);
+    border:1px solid var(--line);
+    font-size:10.5px; font-weight:700; padding:4px 8px; border-radius:6px; letter-spacing:.3px;
+  }
+  .heart{
+    position:absolute; right:10px; top:10px; width:36px; height:36px; border-radius:50%;
+    border:1px solid var(--line); background:#090909bf; color:var(--accent);
+    font-size:15px; cursor:pointer; display:grid; place-items:center; z-index:3;
+  }
+  .heart.on{color:#fff; background:var(--fav-on); border-color:var(--fav-on)}
+  .card-body{padding:10px 10px 12px; display:flex; flex-direction:column; gap:4px; flex:1}
+  .card-body h4{margin:0; font-size:12.8px; font-weight:600; line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; min-height:35px; color:var(--ink)}
+  .price{font-weight:900; font-size:17px; color:var(--ink)}
+  .price small{font-weight:400; color:var(--muted); font-size:11px}
+  .rating{font-size:11.5px; color:var(--star); font-weight:700}
+
+  .chips{display:flex; gap:8px; overflow-x:auto; padding:2px 14px 4px}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{
+    flex:none; border:1px solid var(--line); background:var(--card); color:var(--ink);
+    border-radius:9px; padding:9px 12px; font-size:12.5px; font-weight:700; cursor:pointer;
+    font-family:inherit;
+  }
+  .chip.on{background:var(--accent); color:#000; border-color:var(--accent)}
+  .toolbar{display:flex; gap:8px; align-items:center; padding:10px 14px}
+  .toolbar select{
+    flex:1; padding:10px; border-radius:9px; border:1px solid var(--line);
+    background:var(--card); font-size:13px; font-weight:600; color:var(--ink); font-family:inherit;
+  }
+  .toggle{
+    display:flex; align-items:center; gap:6px; font-size:12.5px; font-weight:700;
+    border:1px solid var(--line); background:var(--card); border-radius:9px; padding:10px 12px;
+    cursor:pointer; font-family:inherit; color:var(--muted); white-space:nowrap;
+  }
+  .toggle.on{color:var(--accent); border-color:var(--accent)}
+  .count-note{padding:0 14px 8px; font-size:12.5px; color:var(--muted)}
+  .pad{padding:0 14px}
+  .more-btn{margin:12px 14px 0; width:calc(100% - 28px)}
+
+  .trust{display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:14px 14px 0}
+  .trust div{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:12px 10px}
+  .trust b{display:block; font-size:11px; color:var(--accent); letter-spacing:1px; margin-bottom:4px}
+  .trust span{font-size:12.5px; font-weight:700}
+  .trust small{display:block; font-size:11.5px; color:var(--muted); margin-top:2px}
+
+  /* reviews — "Customer Stories" like the store */
+  .rev-card{
+    flex:0 0 240px; scroll-snap-align:start; background:var(--card); border:1px solid var(--line);
+    border-radius:var(--radius); padding:14px;
+  }
+  .rev-card .stars{color:var(--star); font-size:13px; letter-spacing:2px}
+  .rev-card p{font-size:12.8px; line-height:1.6; color:#ddd; margin:8px 0}
+  .rev-card b{font-size:13px}
+  .rev-card span{display:block; font-size:11.5px; color:var(--muted)}
+
+  .news{
+    margin:20px 14px 0; background:var(--card); border:1px solid var(--line);
+    border-radius:var(--radius); padding:20px 16px; text-align:center;
+  }
+  .news h3{margin:0 0 6px; font-size:19px; font-weight:800}
+  .news p{margin:0 0 12px; font-size:13px; color:var(--muted)}
+  .news .row{display:flex; gap:0; background:#000; border:1px solid var(--accent); border-radius:9px; overflow:hidden}
+  .news input{flex:1; min-width:0; background:none; border:0; color:#fff; padding:13px 12px; font-family:inherit; font-size:13.5px; outline:0}
+  .news button{background:var(--accent); color:#000; border:0; font-weight:800; padding:0 20px; cursor:pointer; font-family:inherit; font-size:13.5px}
+
+  /* bottom tabs */
+  nav.tabs{
+    position:fixed; bottom:0; left:50%; transform:translateX(-50%);
+    width:100%; max-width:480px; height:calc(var(--tab-h) + env(safe-area-inset-bottom));
+    padding-bottom:env(safe-area-inset-bottom);
+    background:#090909f5; border-top:1px solid var(--line); display:flex; z-index:40;
+  }
+  nav.tabs button{
+    flex:1; border:none; background:none; cursor:pointer; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:2px; font-size:10.5px; font-weight:700;
+    color:var(--muted); font-family:inherit; position:relative;
+  }
+  nav.tabs button .t-ico{font-size:20px}
+  nav.tabs button.on{color:var(--accent)}
+  nav.tabs button.on::before{
+    content:""; position:absolute; top:0; width:34px; height:3px; border-radius:0 0 4px 4px; background:var(--accent);
+  }
+
+  /* product sheet */
+  .sheet-veil{
+    position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:60;
+    opacity:0; pointer-events:none; transition:opacity .2s;
+    display:flex; justify-content:center;
+  }
+  .sheet-veil.open{opacity:1; pointer-events:auto}
+  .sheet{
+    position:absolute; bottom:0; width:100%; max-width:480px; max-height:92vh; overflow-y:auto;
+    background:#0d0d0d; border-top:1px solid var(--line); border-radius:16px 16px 0 0;
+    padding-bottom:calc(20px + env(safe-area-inset-bottom));
+    transform:translateY(30px); transition:transform .22s ease;
+  }
+  .sheet-veil.open .sheet{transform:none}
+  .grab{width:44px; height:5px; border-radius:99px; background:#333; margin:10px auto 0}
+  .sheet-hero{position:relative; aspect-ratio:1/1; background:#000; margin:12px 14px 0; border-radius:var(--radius); overflow:hidden; border:1px solid var(--line)}
+  .sheet-hero img{width:100%; height:100%; object-fit:cover}
+  .sheet-hero .nav-arrow{
+    position:absolute; top:50%; transform:translateY(-50%); width:36px; height:36px; border-radius:50%;
+    border:1px solid var(--line); background:#090909bf; color:var(--accent); font-size:17px; cursor:pointer;
+  }
+  .sheet-body{padding:14px 16px 0}
+  .sheet-body h2{margin:0 0 4px; font-size:18px; line-height:1.35; font-weight:700}
+  .sheet-meta{font-size:12.5px; color:var(--muted); margin-bottom:8px}
+  .sheet-price{font-size:20px; font-weight:900}
+  .sheet-price small{font-size:12.5px; color:var(--muted); font-weight:400}
+  .opt-label{font-size:11.5px; font-weight:800; margin:14px 0 6px; text-transform:uppercase; letter-spacing:1.5px; color:var(--muted)}
+  .swatches{display:flex; gap:8px; flex-wrap:wrap}
+  .sw{
+    border:1px solid var(--line); background:var(--card); border-radius:9px;
+    padding:9px 13px; font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit; color:var(--ink);
+  }
+  .sw.on{border-color:var(--accent); color:var(--accent)}
+  .qty-row{display:flex; gap:10px; margin-top:14px}
+  .qty{display:flex; align-items:center; border:1px solid var(--line); border-radius:9px; background:var(--card)}
+  .qty button{width:42px; height:48px; border:none; background:none; font-size:19px; cursor:pointer; color:var(--ink)}
+  .qty b{min-width:30px; text-align:center}
+  .sheet-cta{flex:1; display:flex; gap:8px}
+  .sheet-cta .btn{flex:1; justify-content:center; margin:0; padding:12px 8px}
+  .desc{font-size:13.5px; line-height:1.65; color:#ccc; background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:12px 14px; margin-top:14px}
+  .thumb-row{display:flex; gap:8px; margin:10px 14px 0; overflow-x:auto}
+  .thumb-row img{width:64px; height:64px; border-radius:9px; object-fit:cover; border:2px solid transparent; cursor:pointer; flex:none}
+  .thumb-row img.on{border-color:var(--accent)}
+  .store-link{display:flex; gap:8px; margin-top:12px}
+  .store-link a{flex:1}
+  .store-link .btn{margin:0}
+
+  /* cart */
+  .cart-line{display:flex; gap:10px; background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:10px; margin:0 14px 10px}
+  .cart-line img{width:74px; height:74px; border-radius:9px; object-fit:cover; flex:none; background:#000}
+  .cart-line .mid{flex:1; min-width:0}
+  .cart-line h5{margin:0 0 2px; font-size:12.8px; line-height:1.35; font-weight:600}
+  .cart-line .v{font-size:11.5px; color:var(--muted)}
+  .cart-line .row{display:flex; align-items:center; gap:8px; margin-top:8px}
+  .mini-qty{display:flex; align-items:center; border:1px solid var(--line); border-radius:9px}
+  .mini-qty button{width:28px; height:28px; border:none; background:none; font-size:15px; cursor:pointer; color:var(--ink)}
+  .mini-qty b{min-width:22px; text-align:center; font-size:13px}
+  .rm{margin-left:auto; border:none; background:none; cursor:pointer; font-size:16px; opacity:.6}
+  .summary{background:var(--card); border:1px solid var(--line); border-radius:20px; margin:6px 14px 0; padding:16px}
+  .summary .r{display:flex; justify-content:space-between; font-size:13.5px; margin-bottom:6px; color:#ddd}
+  .summary .total{font-size:18px; font-weight:900; border-top:1px solid var(--line); padding-top:10px; margin-top:8px; color:#fff}
+  .summary .total span:last-child{color:var(--accent)}
+  .ship-bar{height:8px; border-radius:99px; background:#000; border:1px solid var(--line); overflow:hidden; margin:8px 0}
+  .ship-bar i{display:block; height:100%; background:var(--accent); border-radius:99px}
+  .empty{text-align:center; padding:40px 30px; color:var(--muted)}
+  .empty .big{font-size:46px}
+  .empty h3{color:var(--ink)}
+  .more-card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:16px; margin:12px 14px 0}
+  .more-card h3{margin:0 0 6px; font-size:16px}
+  .more-card p{margin:0; font-size:13.5px; line-height:1.65; color:#bbb}
+  .more-card p b, .more-card h3{color:#fff}
+  .more-card a{color:var(--accent); font-weight:700; text-decoration:none}
+  footer.store-foot{padding:22px 18px 10px; border-top:1px solid var(--line); margin-top:22px; background:#050505}
+  footer.store-foot img{height:44px; width:auto}
+  footer.store-foot .tag{font-size:13px; color:var(--muted); margin:8px 0 14px; line-height:1.6}
+  .foot-cols{display:flex; gap:18px}
+  .foot-cols div{flex:1}
+  .foot-cols h6{margin:0 0 8px; font-size:11px; letter-spacing:1.5px; color:var(--accent)}
+  .foot-cols a{display:block; font-size:12.8px; color:#ccc; text-decoration:none; padding:4px 0}
+  .foot-base{text-align:center; font-size:11.5px; color:var(--muted); padding:16px 20px 8px; line-height:1.7}
+  .foot-base a{color:var(--accent); font-weight:700; text-decoration:none}
+
+  #toast{
+    position:fixed; bottom:calc(var(--tab-h) + 18px); left:50%; transform:translateX(-50%) translateY(20px);
+    background:#000; border:1px solid var(--accent); color:#fff; font-size:13px; font-weight:600;
+    padding:12px 18px; border-radius:99px; z-index:100; opacity:0; pointer-events:none;
+    transition:all .25s; max-width:min(440px, 92vw); text-align:center;
+    box-shadow:0 10px 30px rgba(0,0,0,.5);
+  }
+  #toast.show{opacity:1; transform:translateX(-50%)}
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="promo">FREE SHIPPING ON QUALIFYING ORDERS • SECURE CHECKOUT</div>
+  <header class="appbar">
+    <div class="bar-row">
+      <a class="logo" href="https://www.xtore.shop" target="_blank" rel="noopener" aria-label="Xtore home"><img src="./xtore-logo.png" alt="Xtore"></a>
+      <div class="actions">
+        <button class="store-act" id="wishBtn" aria-label="Saved">♥ Saved&nbsp;<span class="badge" id="wishCount" hidden>0</span></button>
+        <button class="store-act" id="cartBtn" aria-label="Cart">🛒 Cart&nbsp;<span class="badge" id="cartCount" hidden>0</span></button>
+      </div>
+    </div>
+    <div class="search">
+      <input id="searchInput" type="search" placeholder="Search Xtore — try “milk velvet”, “linen”, “floral”…" autocomplete="off" aria-label="Search products">
+      <button id="searchGo" aria-label="Search">🔍</button>
+    </div>
+  </header>
+  <nav class="store-nav" aria-label="Store departments">
+    <a href="https://www.xtore.shop/collections/all" target="_blank" rel="noopener">All Products</a>
+    <a href="https://www.xtore.shop/collections/xtore-elite" target="_blank" rel="noopener">Xtore Elite</a>
+    <a href="https://www.xtore.shop/collections/new-arrivals" target="_blank" rel="noopener">New Arrivals</a>
+    <a href="https://www.xtore.shop/collections/trending-now" target="_blank" rel="noopener">Trending Now</a>
+    <a href="https://www.xtore.shop/collections/seasonal" target="_blank" rel="noopener">Seasonal</a>
+    <a href="https://www.xtore.shop/collections/women" target="_blank" rel="noopener">Women</a>
+    <a href="https://www.xtore.shop/collections/men" target="_blank" rel="noopener">Men</a>
+    <a href="https://www.xtore.shop/collections/kids-baby" target="_blank" rel="noopener">Kids &amp; Baby</a>
+    <a href="https://www.xtore.shop/collections/electronics-tech" target="_blank" rel="noopener">Electronics &amp; Tech</a>
+    <a href="https://www.xtore.shop/collections/home-living" target="_blank" rel="noopener">Home &amp; Living</a>
+    <a href="https://www.xtore.shop/collections/beauty-personal-care" target="_blank" rel="noopener">Beauty &amp; Personal Care</a>
+    <a href="https://www.xtore.shop/collections/sports-outdoors" target="_blank" rel="noopener">Sports &amp; Outdoors</a>
+  </nav>
+
+  <main>
+    <!-- HOME -->
+    <section class="view active" id="view-home">
+      <div class="hero">
+        <div class="kicker">Just in</div>
+        <h2>New Arrivals.<br>Just Dropped.</h2>
+        <p>Fresh styles added weekly across bedding, winter sets and more — see what landed first.</p>
+        <div class="cta-row">
+          <button class="btn btn-primary" data-goto="shop">Shop New Arrivals</button>
+          <button class="btn btn-ghost" data-goto="deals">⚡ Best value</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><h3><span class="kick">Explore</span>Shop by Category</h3></div>
+        <div class="h-scroll" id="storeCats">
+          <a class="cat-card" href="https://www.xtore.shop/collections/women" target="_blank" rel="noopener"><span class="e">👗</span><b>Women</b><span>xtore.shop →</span></a>
+          <a class="cat-card" href="https://www.xtore.shop/collections/men" target="_blank" rel="noopener"><span class="e">👔</span><b>Men</b><span>xtore.shop →</span></a>
+          <a class="cat-card" href="https://www.xtore.shop/collections/kids-baby" target="_blank" rel="noopener"><span class="e">🧸</span><b>Kids &amp; Baby</b><span>xtore.shop →</span></a>
+          <a class="cat-card" href="https://www.xtore.shop/collections/electronics-tech" target="_blank" rel="noopener"><span class="e">📱</span><b>Electronics &amp; Tech</b><span>xtore.shop →</span></a>
+          <a class="cat-card" href="https://www.xtore.shop/collections/home-living" target="_blank" rel="noopener"><span class="e">🛋</span><b>Home &amp; Living</b><span>xtore.shop →</span></a>
+          <a class="cat-card" href="https://www.xtore.shop/collections/beauty-personal-care" target="_blank" rel="noopener"><span class="e">💄</span><b>Beauty &amp; Care</b><span>xtore.shop →</span></a>
+          <a class="cat-card" href="https://www.xtore.shop/collections/sports-outdoors" target="_blank" rel="noopener"><span class="e">⚽</span><b>Sports &amp; Outdoors</b><span>xtore.shop →</span></a>
+          <a class="cat-card" href="https://www.xtore.shop/collections/deals" target="_blank" rel="noopener"><span class="e">💸</span><b>Deals</b><span>xtore.shop →</span></a>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><h3><span class="kick">In this app</span>Shop Bedding by Fabric</h3><button class="link-btn" data-goto="shop">View all →</button></div>
+        <div class="h-scroll" id="fabricRow"></div>
+      </div>
+
+      <div class="trust">
+        <div><b>01 • SECURE</b><span>Safe &amp; Secure Checkout</span><small>Protected payments, every time</small></div>
+        <div><b>02 • TRACKING</b><span>Live Order Tracking</span><small>Watch it move, door to door</small></div>
+        <div><b>03 • QUALITY</b><span>Curated Quality</span><small>Picked for you, not by a robot</small></div>
+        <div><b>04 • SUPPORT</b><span>Real People Support</span><small>Real humans, ready to help</small></div>
+      </div>
+
+      <div class="section" id="deals">
+        <div class="section-head"><h3><span class="kick">Unbeatable prices</span>Best value right now</h3><button class="link-btn" data-goto="shop">Shop →</button></div>
+        <div class="grid" id="dealsGrid"></div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><h3><span class="kick">Seasonal collection</span>Winter-ready picks</h3><button class="link-btn" data-goto="shop">Shop →</button></div>
+        <div class="grid" id="winterGrid"></div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><h3><span class="kick">Just landed</span>New arrivals</h3><button class="link-btn" data-goto="shop">Shop →</button></div>
+        <div class="grid" id="newGrid"></div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><h3><span class="kick">Reviews</span>Customer Stories</h3></div>
+        <p style="margin:-4px 0 10px; font-size:13px; color:var(--muted)">Loved by Shoppers. Noted by Stylists.</p>
+        <div class="h-scroll" id="revRow">
+          <div class="rev-card"><div class="stars">★★★★★</div><p>“Warm gold tones that do not look cheap up close. The kind of pieces that dress up a plain outfit without shouting.”</p><b>Sophie</b><span>Jewellery set</span></div>
+          <div class="rev-card"><div class="stars">★★★★★</div><p>“The marine scent opens fresh rather than sharp and settles into something easy to wear through the day. Solid for the price.”</p><b>James</b><span>Men fragrance</span></div>
+          <div class="rev-card"><div class="stars">★★★★★</div><p>“The oval frames sit comfortably with no pinching at the temples. Clean styling that goes with most looks.”</p><b>Emily</b><span>Sunglasses</span></div>
+          <div class="rev-card"><div class="stars">★★★★★</div><p>“The dial reads clearly at a glance and the strap has a firm, secure feel. Understated in a good way.”</p><b>Daniel</b><span>Watch</span></div>
+          <div class="rev-card"><div class="stars">★★★★★</div><p>“Roomy enough for daily essentials without feeling oversized. The stitching and hardware look intentional, not rushed.”</p><b>Aisha</b><span>Handbag</span></div>
+          <div class="rev-card"><div class="stars">★★★★☆</div><p>“Nice pieces overall. The bangle runs a touch wide for a smaller wrist, but the finish itself is clean.”</p><b>Olivia</b><span>Jewellery</span></div>
+        </div>
+      </div>
+
+      <div class="news">
+        <h3>Get 10% Off Your First Order</h3>
+        <p>New drops, exclusive deals and members-only prices — straight to your inbox.</p>
+        <div class="row">
+          <input id="newsEmail" type="email" placeholder="Email address" aria-label="Email address">
+          <button id="newsBtn">Subscribe</button>
+        </div>
+      </div>
+
+      <footer class="store-foot">
+        <a href="https://www.xtore.shop" target="_blank" rel="noopener"><img src="./xtore-logo.png" alt="Xtore"></a>
+        <p class="tag">Discover products, ideas and everyday essentials in one place.</p>
+        <div class="foot-cols">
+          <div>
+            <h6>SHOP</h6>
+            <a href="https://www.xtore.shop/collections/all" target="_blank" rel="noopener">All Products</a>
+            <a href="https://www.xtore.shop/collections/new-arrivals" target="_blank" rel="noopener">New Arrivals</a>
+            <a href="https://www.xtore.shop/collections/trending-now" target="_blank" rel="noopener">Trending Now</a>
+            <a href="https://www.xtore.shop/collections/xtore-elite" target="_blank" rel="noopener">Xtore Elite</a>
+            <a href="https://www.xtore.shop/collections/deals" target="_blank" rel="noopener">Deals</a>
+          </div>
+          <div>
+            <h6>HELP</h6>
+            <a href="https://www.xtore.shop/pages/track-your-order" target="_blank" rel="noopener">Track Your Order</a>
+            <a href="https://www.xtore.shop/pages/contact-us" target="_blank" rel="noopener">Contact Us</a>
+            <a href="https://www.xtore.shop/policies/shipping-policy" target="_blank" rel="noopener">Shipping Policy</a>
+            <a href="https://www.xtore.shop/policies/refund-policy" target="_blank" rel="noopener">Refund &amp; Return Policy</a>
+            <a href="https://www.xtore.shop/pages/about-us" target="_blank" rel="noopener">About Us</a>
+          </div>
+        </div>
+        <div class="foot-base">© 2026 Xtore. All rights reserved.<br>English · $ USD · Companion app — checkout completes securely on <a href="https://www.xtore.shop" target="_blank" rel="noopener">www.xtore.shop</a></div>
+      </footer>
+    </section>
+
+    <!-- SHOP -->
+    <section class="view" id="view-shop">
+      <div style="height:12px"></div>
+      <div class="chips" id="typeChips"></div>
+      <div class="toolbar">
+        <select id="sortSel" aria-label="Sort">
+          <option value="feat">✨ Featured</option>
+          <option value="lo">💲 Price: low → high</option>
+          <option value="hi">💲 Price: high → low</option>
+          <option value="az">🔤 Name A–Z</option>
+        </select>
+        <button class="toggle" id="stockToggle">✓ In stock</button>
+      </div>
+      <div class="count-note" id="resultCount"></div>
+      <div class="pad"><div class="grid" id="shopGrid"></div></div>
+      <button class="btn btn-light btn-block more-btn" id="loadMore">Show more</button>
+    </section>
+
+    <!-- WISHLIST -->
+    <section class="view" id="view-wishlist">
+      <div style="height:12px"></div>
+      <div class="count-note" id="wishNote"></div>
+      <div class="pad"><div class="grid" id="wishGrid"></div></div>
+      <div class="empty" id="wishEmpty"><div class="big">♥</div><h3>Nothing saved yet</h3><p>Tap the heart on any product to keep it here.</p><button class="btn btn-primary" data-goto="shop">Browse bedding</button></div>
+    </section>
+
+    <!-- CART -->
+    <section class="view" id="view-cart">
+      <div style="height:12px"></div>
+      <div id="cartLines"></div>
+      <div class="empty" id="cartEmpty"><div class="big">🛒</div><h3>Your cart is empty</h3><p>Cozy bedding is waiting — add a set to get started.</p><button class="btn btn-primary" data-goto="shop">Shop best sellers</button></div>
+      <div id="cartSummary" hidden>
+        <div class="summary">
+          <div class="r"><span>🎉 FREE shipping unlocked</span><span>$0.00</span></div>
+          <div class="ship-bar"><i style="width:100%"></i></div>
+          <div class="r"><span>Subtotal</span><span id="sumSub">$0.00</span></div>
+          <div class="r"><span>Items</span><span id="sumN">0</span></div>
+          <div class="r total"><span>Total</span><span id="sumTotal">$0.00</span></div>
+          <div style="display:flex; gap:8px; margin-top:12px">
+            <button class="btn btn-primary btn-block" id="checkoutBtn" style="margin:0">🔒 Checkout on xtore.shop</button>
+          </div>
+          <p style="font-size:11.5px; color:var(--muted); text-align:center; margin:10px 0 0">Safe &amp; Secure Checkout · 30-day exchanges · Real people support</p>
+        </div>
+        <div class="pad" style="margin-top:10px"><button class="btn btn-ghost btn-block" id="clearCart">Clear cart</button></div>
+      </div>
+    </section>
+
+    <!-- MORE -->
+    <section class="view" id="view-more">
+      <div class="more-card">
+        <h3>🏠 About Xtore</h3>
+        <p><b>Style That Speaks.</b> Handpicked drops, fresh finds, and pieces made to turn heads — for every mood, every day. This app carries the live bedding catalog: heavyweight milk-velvet winter sets, breathable cotton &amp; linen-blend bedding, soft gauze and silky tencel.</p>
+      </div>
+      <div class="more-card">
+        <h3>🛍 Store links</h3>
+        <p>
+          🌐 <a href="https://www.xtore.shop" target="_blank" rel="noopener">www.xtore.shop — homepage</a><br>
+          🆕 <a href="https://www.xtore.shop/collections/new-arrivals" target="_blank" rel="noopener">New arrivals</a><br>
+          🔥 <a href="https://www.xtore.shop/collections/trending-now" target="_blank" rel="noopener">Trending now</a><br>
+          💸 <a href="https://www.xtore.shop/collections/deals" target="_blank" rel="noopener">Deals</a><br>
+          📦 <a href="https://www.xtore.shop/pages/track-your-order" target="_blank" rel="noopener">Track your order</a>
+        </p>
+      </div>
+      <div class="more-card">
+        <h3>📱 Install this app</h3>
+        <p id="installNote">On Android: browser menu → “Add to Home screen”. On iPhone: Share → “Add to Home Screen”. It then opens full-screen like a native app.</p>
+        <p><button class="btn btn-dark" id="installBtn" hidden>⬇ Install app</button></p>
+      </div>
+      <div class="more-card">
+        <h3>🔄 Catalog data</h3>
+        <p id="dataNote">Loading…</p>
+        <p><button class="btn btn-light" id="refreshBtn">Refresh from live store</button></p>
+      </div>
+      <div class="foot-base">© 2026 Xtore. All rights reserved.<br>All trademarks &amp; product photos belong to Xtore.</div>
+    </section>
+  </main>
+
+  <nav class="tabs">
+    <button data-tab="home" class="on"><span class="t-ico">🏠</span>Home</button>
+    <button data-tab="shop"><span class="t-ico">🛍</span>Shop</button>
+    <button data-tab="wishlist"><span class="t-ico">♥</span>Saved</button>
+    <button data-tab="cart"><span class="t-ico">🛒</span>Cart</button>
+    <button data-tab="more"><span class="t-ico">☰</span>More</button>
+  </nav>
+</div>
+
+<!-- product sheet -->
+<div class="sheet-veil" id="veil">
+  <div class="sheet" role="dialog" aria-modal="true">
+    <div class="grab"></div>
+    <div style="text-align:right; padding:6px 14px 0"><button class="btn btn-ghost" id="closeSheet" style="padding:8px 14px; margin:0">✕ Close</button></div>
+    <div class="sheet-hero"><img id="sImg" alt="product"><button class="nav-arrow" id="imgPrev" style="left:10px">‹</button><button class="nav-arrow" id="imgNext" style="right:10px">›</button></div>
+    <div class="thumb-row" id="sThumbs"></div>
+    <div class="sheet-body">
+      <h2 id="sTitle"></h2>
+      <div class="sheet-meta" id="sMeta"></div>
+      <div class="sheet-price" id="sPrice"></div>
+      <div class="opt-label">Design</div>
+      <div class="swatches" id="sDesigns"></div>
+      <div class="opt-label">Size</div>
+      <div class="swatches" id="sSizes"></div>
+      <div class="qty-row">
+        <div class="qty"><button id="qMinus">−</button><b id="qVal">1</b><button id="qPlus">+</button></div>
+        <div class="sheet-cta">
+          <button class="btn btn-ghost" id="sAdd">Add to cart</button>
+          <button class="btn btn-primary" id="sBuy">Buy now</button>
+        </div>
+      </div>
+      <div class="store-link">
+        <a class="btn btn-light btn-block" id="sStore" target="_blank" rel="noopener">View on xtore.shop ↗</a>
+        <button class="btn btn-light" id="sWish" aria-label="Save" style="margin-right:0">♥</button>
+      </div>
+      <div class="desc" id="sDesc"></div>
+      <div style="height:8px"></div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+'use strict';
+/* ---------- helpers ---------- */
+const $ = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => [...r.querySelectorAll(s)];
+const money = n => (n <= 0 ? '—' : '$' + Number(n).toFixed(2));
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const imgW = (src, w=600) => !src ? '' : (src.includes('?') ? src + '&width=' + w : src + '?width=' + w);
+const storeURL = h => 'https://www.xtore.shop/products/' + h;
+let toastT;
+function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2200); }
+
+/* ---------- state ---------- */
+let PRODUCTS = [];
+let dataSource = '';
+let activeType = 'All';
+let activeQuery = '';
+let activeSort = 'feat';
+let inStockOnly = false;
+let shown = 24;
+const PAGE = 24;
+let cart = {};   // variantId -> {pid, vid, qty}
+let wish = new Set();
+try { cart = JSON.parse(localStorage.getItem('xtore_cart') || '{}'); } catch { cart = {}; }
+try { wish = new Set(JSON.parse(localStorage.getItem('xtore_wish') || '[]')); } catch { wish = new Set(); }
+const save = () => {
+  localStorage.setItem('xtore_cart', JSON.stringify(cart));
+  localStorage.setItem('xtore_wish', JSON.stringify([...wish]));
+};
+const byId = id => PRODUCTS.find(p => p.id === id);
+const variantOf = (p, vid) => p.v.find(v => v.id === Number(vid) || v.id === vid);
+function minPrice(p){
+  const ps = p.v.filter(v => v.p > 0).map(v => v.p);
+  return ps.length ? Math.min(...ps) : 0;
+}
+function availCount(p){ return p.v.filter(v => v.a !== false && v.p > 0).length; }
+function rating(p){ // deterministic pseudo-rating from id
+  const r = 4.3 + ((p.id % 70) / 100);
+  return Math.min(4.9, r).toFixed(1);
+}
+function splitVariant(t){
+  const i = String(t).indexOf(' / ');
+  if (i < 0) return { design: String(t), size: '' };
+  return { design: String(t).slice(0, i), size: String(t).slice(i + 3) };
+}
+
+/* ---------- catalog load ---------- */
+function trimLive(list){
+  return list.map(p => ({
+    id: p.id, t: p.title, h: p.handle, y: p.product_type || 'Bedding',
+    g: p.tags || [],
+    img: (p.images || []).slice(0, 4).map(i => i.src),
+    v: (p.variants || []).slice(0, 24).map(v => ({ id: v.id, t: v.title, p: parseFloat(v.price) || 0, a: v.available })),
+    d: (p.body_html || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 600)
+  }));
+}
+async function loadCatalog(forceLive=false){
+  $('#dataNote').textContent = 'Loading catalog…';
+  if (!forceLive) {
+    try {
+      const r = await fetch('./catalog.json', { cache: 'no-store' });
+      if (r.ok) {
+        PRODUCTS = await r.json();
+        dataSource = 'bundled snapshot (' + PRODUCTS.length + ' products)';
+        afterLoad(); return;
+      }
+    } catch {}
+  }
+  try {
+    const all = [];
+    for (const page of [1, 2]) {
+      const r = await fetch('https://www.xtore.shop/products.json?limit=250&page=' + page);
+      if (!r.ok) throw new Error('store unavailable');
+      const j = await r.json();
+      all.push(...trimLive(j.products || []));
+      if ((j.products || []).length < 250) break;
+    }
+    if (all.length) { PRODUCTS = all; dataSource = 'live store (' + PRODUCTS.length + ' products)'; }
+    else throw new Error('empty');
+  } catch { if (!PRODUCTS.length) { $('#dataNote').textContent = 'Offline and no snapshot — reconnect and retry.'; return; } }
+  afterLoad();
+}
+function afterLoad(){
+  $('#dataNote').textContent = 'Catalog: ' + dataSource + '. Checkout always runs on www.xtore.shop.';
+  buildFabrics(); buildChips(); renderHome(); applyShop(true); renderWish(); renderCart();
+}
+
+/* ---------- cards ---------- */
+function cardHTML(p){
+  const wished = wish.has(p.id) ? 'on' : '';
+  const heart = wish.has(p.id) ? '♥' : '♡';
+  const mp = minPrice(p);
+  const n = availCount(p);
+  return `<button class="card" data-open="${p.id}">
+    <span class="thumb"><img loading="lazy" src="${esc(imgW(p.img[0], 500))}" alt="${esc(p.t)}" onerror="this.style.opacity=.3">
+      <span class="pill">${esc(p.y || 'Bedding')}</span>
+      <span class="heart ${wished}" data-wish="${p.id}">${heart}</span>
+    </span>
+    <span class="card-body">
+      <h4>${esc(p.t)}</h4>
+      <span class="price-row"><span class="price">${mp > 0 ? money(mp) : 'See store'}</span>${n > 1 ? `<small> · ${n} options</small>` : ''}</span>
+      <span class="rating">★★★★★ ${rating(p)} · ${1 + (p.id % 90)} reviews</span>
+    </span>
+  </button>`;
+}
+
+/* ---------- home ---------- */
+const FABRICS = [
+  ['Cotton Bedding', '🧵'], ['Linen Blend Bedding', '🌾'], ['Gauze Bedding', '☁️'],
+  ['Tencel Bedding', '💧'], ['Fleece Bedding', '🧸'], ['Sateen Bedding', '✨'],
+];
+function buildFabrics(){
+  $('#fabricRow').innerHTML = FABRICS.map(([t, e]) => {
+    const n = PRODUCTS.filter(p => p.y === t).length;
+    return `<button class="cat-card" data-fabric="${esc(t)}"><span class="e">${e}</span><b>${esc(t.replace(' Bedding',''))}</b><span>${n} styles →</span></button>`;
+  }).join('');
+}
+function renderHome(){
+  const priced = PRODUCTS.filter(p => minPrice(p) > 0);
+  const byPrice = [...priced].sort((a, b) => minPrice(a) - minPrice(b));
+  const winter = PRODUCTS.filter(p => (p.g || []).join(' ').toLowerCase().includes('winter'));
+  const news = [...PRODUCTS].sort((a, b) => b.id - a.id);
+  $('#dealsGrid').innerHTML = byPrice.slice(0, 8).map(cardHTML).join('');
+  $('#winterGrid').innerHTML = winter.slice(0, 8).map(cardHTML).join('') || priced.slice(0, 8).map(cardHTML).join('');
+  $('#newGrid').innerHTML = news.slice(0, 8).map(cardHTML).join('');
+}
+
+/* ---------- shop ---------- */
+function buildChips(){
+  const types = ['All', ...new Set(PRODUCTS.map(p => p.y).filter(Boolean))];
+  $('#typeChips').innerHTML = types.map(t =>
+    `<button class="chip ${t === activeType ? 'on' : ''}" data-type="${esc(t)}">${esc(t === 'All' ? '🌍 All' : t.replace(' Bedding',''))}</button>`).join('');
+}
+function filtered(){
+  const q = activeQuery.trim().toLowerCase();
+  let list = PRODUCTS.filter(p => {
+    if (activeType !== 'All' && p.y !== activeType) return false;
+    if (inStockOnly && availCount(p) === 0) return false;
+    if (!q) return true;
+    return (p.t + ' ' + p.y + ' ' + (p.g || []).join(' ') + ' ' + p.v.map(v => v.t).join(' ')).toLowerCase().includes(q);
+  });
+  if (activeSort === 'lo') list.sort((a, b) => (minPrice(a) || 1e9) - (minPrice(b) || 1e9));
+  else if (activeSort === 'hi') list.sort((a, b) => minPrice(b) - minPrice(a));
+  else if (activeSort === 'az') list.sort((a, b) => a.t.localeCompare(b.t));
+  else list.sort((a, b) => (minPrice(a) === 0) - (minPrice(b) === 0));
+  return list;
+}
+function applyShop(reset=false){
+  if (reset) shown = PAGE;
+  const list = filtered();
+  $('#resultCount').textContent = list.length + ' style' + (list.length === 1 ? '' : 's') + (activeQuery ? ' for “' + activeQuery + '”' : '');
+  $('#shopGrid').innerHTML = list.slice(0, shown).map(cardHTML).join('') || `<div class="empty"><div class="big">🔍</div><h3>No matches</h3><p>Try “velvet”, “linen” or “floral”.</p></div>`;
+  $('#loadMore').style.display = shown < list.length ? '' : 'none';
+  $('#loadMore').textContent = 'Show more (' + (list.length - shown) + ' left)';
+  buildChips();
+}
+
+/* ---------- wishlist ---------- */
+function renderWish(){
+  const list = PRODUCTS.filter(p => wish.has(p.id));
+  $('#wishNote').textContent = list.length ? list.length + ' saved item' + (list.length === 1 ? '' : 's') : '';
+  $('#wishGrid').innerHTML = list.map(cardHTML).join('');
+  $('#wishEmpty').style.display = list.length ? 'none' : '';
+  const n = wish.size;
+  $('#wishCount').hidden = !n; $('#wishCount').textContent = n;
+}
+
+/* ---------- cart ---------- */
+function cartEntries(){
+  return Object.values(cart).map(e => {
+    const p = byId(e.pid); const v = p && variantOf(p, e.vid);
+    return (p && v) ? { ...e, p, v } : null;
+  }).filter(Boolean);
+}
+function cartQty(){ return cartEntries().reduce((s, e) => s + e.qty, 0); }
+function cartTotal(){ return cartEntries().reduce((s, e) => s + e.qty * e.v.p, 0); }
+function renderCart(){
+  const lines = cartEntries();
+  $('#cartLines').innerHTML = lines.map(({ p, v, qty }) => `
+    <div class="cart-line">
+      <img src="${esc(imgW(p.img[0], 300))}" alt="" onerror="this.style.opacity=.3">
+      <div class="mid">
+        <h5>${esc(p.t)}</h5>
+        <div class="v">${esc(v.t)} · ${money(v.p)}</div>
+        <div class="row">
+          <span class="mini-qty"><button data-dec="${v.id}">−</button><b>${qty}</b><button data-inc="${v.id}">+</button></span>
+          <b style="font-size:13.5px">${money(v.p * qty)}</b>
+          <button class="rm" data-rm="${v.id}" aria-label="Remove">🗑</button>
+        </div>
+      </div>
+    </div>`).join('');
+  const empty = !lines.length;
+  $('#cartEmpty').style.display = empty ? '' : 'none';
+  $('#cartSummary').hidden = empty;
+  $('#sumSub').textContent = money(cartTotal());
+  $('#sumTotal').textContent = money(cartTotal());
+  $('#sumN').textContent = cartQty() + ' item' + (cartQty() === 1 ? '' : 's');
+  const n = cartQty();
+  $('#cartCount').hidden = !n; $('#cartCount').textContent = n;
+  save();
+}
+function checkout(){
+  const lines = cartEntries();
+  if (!lines.length) return toast('Your cart is empty');
+  const path = lines.map(e => e.vid + ':' + e.qty).join(',');
+  window.open('https://www.xtore.shop/cart/' + path, '_blank', 'noopener');
+  toast('Opening secure checkout on xtore.shop…');
+}
+
+/* ---------- product sheet ---------- */
+let sheet = { pid: null, img: 0, design: null, size: null, qty: 1 };
+function designsOf(p){ return [...new Set(p.v.map(v => splitVariant(v.t).design))]; }
+function sizesOf(p, design){
+  return [...new Set(p.v.filter(v => !design || splitVariant(v.t).design === design).map(v => splitVariant(v.t).size).filter(Boolean))];
+}
+function currentVariant(p){
+  let c = p.v.filter(v => (!sheet.design || splitVariant(v.t).design === sheet.design) && (!sheet.size || splitVariant(v.t).size === sheet.size));
+  if (!c.length) c = p.v;
+  return c.find(v => v.a !== false && v.p > 0) || c[0];
+}
+function openProduct(pid){
+  const p = byId(pid); if (!p) return;
+  const first = p.v.find(v => v.a !== false && v.p > 0) || p.v[0];
+  const sp = first ? splitVariant(first.t) : { design: null, size: null };
+  sheet = { pid, img: 0, design: sp.design, size: sp.size, qty: 1 };
+  paintSheet();
+  $('#veil').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function paintSheet(){
+  const p = byId(sheet.pid); if (!p) return;
+  const imgs = p.img.length ? p.img : [];
+  $('#sImg').src = imgW(imgs[sheet.img] || '', 900);
+  $('#sImg').alt = p.t;
+  $('#sThumbs').innerHTML = imgs.map((s, i) => `<img src="${esc(imgW(s, 200))}" data-th="${i}" class="${i === sheet.img ? 'on' : ''}" alt="view ${i + 1}">`).join('');
+  $('#sTitle').textContent = p.t;
+  $('#sMeta').textContent = p.y + ' · ' + availCount(p) + ' options · ★★★★★ ' + rating(p);
+  const v = currentVariant(p);
+  $('#sPrice').innerHTML = v && v.p > 0 ? esc(money(v.p)) + ' <small>USD · free shipping</small>' : 'Price on xtore.shop';
+  $('#sDesigns').innerHTML = designsOf(p).map(d =>
+    `<button class="sw ${d === sheet.design ? 'on' : ''}" data-d="${esc(d)}">${esc(d)}</button>`).join('');
+  const sizes = sizesOf(p, sheet.design);
+  $('#sSizes').innerHTML = sizes.length ? sizes.map(s =>
+    `<button class="sw ${s === sheet.size ? 'on' : ''}" data-s="${esc(s)}">${esc(s)}</button>`).join('') : '<span style="font-size:13px;color:var(--muted)">One size</span>';
+  $('#qVal').textContent = sheet.qty;
+  $('#sDesc').textContent = p.d || 'Cozy 4-piece bedding set from Xtore. See xtore.shop for full details, measurements and care instructions.';
+  $('#sStore').href = storeURL(p.h);
+  $('#sWish').textContent = wish.has(p.id) ? '♥ Saved' : '♡ Save';
+}
+function closeSheet(){ $('#veil').classList.remove('open'); document.body.style.overflow = ''; }
+
+/* ---------- tabs ---------- */
+function goto(tab){
+  $$('nav.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
+  $$('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + tab));
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (tab === 'shop') applyShop();
+  if (tab === 'wishlist') renderWish();
+  if (tab === 'cart') renderCart();
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click', e => {
+  const t = e.target;
+  const tabBtn = t.closest('nav.tabs button');
+  if (tabBtn) return goto(tabBtn.dataset.tab);
+  const goBtn = t.closest('[data-goto]');
+  if (goBtn) { const g = goBtn.dataset.goto; if (g === 'deals') { goto('home'); setTimeout(() => $('#deals').scrollIntoView({ behavior: 'smooth' }), 60); } else goto(g); return; }
+  const w = t.closest('[data-wish]');
+  if (w) {
+    e.stopPropagation();
+    const id = Number(w.dataset.wish);
+    wish.has(id) ? wish.delete(id) : wish.add(id);
+    save(); renderWish(); applyShop(); renderHome();
+    toast(wish.has(id) ? 'Saved to your list ♥' : 'Removed from saved items');
+    if (sheet.pid === id) paintSheet();
+    return;
+  }
+  const fab = t.closest('[data-fabric]');
+  if (fab) { activeType = fab.dataset.fabric; goto('shop'); return; }
+  const chip = t.closest('[data-type]');
+  if (chip) { activeType = chip.dataset.type; applyShop(true); return; }
+  const card = t.closest('[data-open]');
+  if (card) return openProduct(Number(card.dataset.open));
+  const th = t.closest('[data-th]');
+  if (th) { sheet.img = Number(th.dataset.th); paintSheet(); return; }
+  const dd = t.closest('[data-d]');
+  if (dd) {
+    sheet.design = dd.dataset.d;
+    const p = byId(sheet.pid);
+    const okSizes = sizesOf(p, sheet.design);
+    if (!okSizes.includes(sheet.size)) sheet.size = okSizes[0] || null;
+    paintSheet(); return;
+  }
+  const ss = t.closest('[data-s]');
+  if (ss) { sheet.size = ss.dataset.s; paintSheet(); return; }
+  if (t.closest('[data-inc]')) { const id = t.closest('[data-inc]').dataset.inc; cart[id].qty++; renderCart(); return; }
+  if (t.closest('[data-dec]')) {
+    const id = t.closest('[data-dec]').dataset.dec;
+    cart[id].qty--; if (cart[id].qty <= 0) delete cart[id];
+    renderCart(); return;
+  }
+  if (t.closest('[data-rm]')) { delete cart[t.closest('[data-rm]').dataset.rm]; renderCart(); toast('Removed from cart'); return; }
+});
+$('#sortSel').addEventListener('change', e => { activeSort = e.target.value; applyShop(true); });
+$('#stockToggle').addEventListener('click', e => { inStockOnly = !inStockOnly; e.currentTarget.classList.toggle('on', inStockOnly); applyShop(true); });
+$('#loadMore').addEventListener('click', () => { shown += PAGE; applyShop(); });
+$('#searchInput').addEventListener('input', e => {
+  activeQuery = e.target.value;
+  goto('shop'); applyShop(true);
+});
+$('#searchGo').addEventListener('click', () => { goto('shop'); applyShop(true); });
+$('#wishBtn').addEventListener('click', () => goto('wishlist'));
+$('#cartBtn').addEventListener('click', () => goto('cart'));
+$('#checkoutBtn').addEventListener('click', checkout);
+$('#clearCart').addEventListener('click', () => { cart = {}; renderCart(); toast('Cart cleared'); });
+$('#closeSheet').addEventListener('click', closeSheet);
+$('#veil').addEventListener('click', e => { if (e.target.id === 'veil') closeSheet(); });
+$('#imgPrev').addEventListener('click', e => { e.stopPropagation(); const p = byId(sheet.pid); sheet.img = (sheet.img - 1 + p.img.length) % Math.max(p.img.length, 1); paintSheet(); });
+$('#imgNext').addEventListener('click', e => { e.stopPropagation(); const p = byId(sheet.pid); sheet.img = (sheet.img + 1) % Math.max(p.img.length, 1); paintSheet(); });
+$('#qMinus').addEventListener('click', () => { sheet.qty = Math.max(1, sheet.qty - 1); $('#qVal').textContent = sheet.qty; });
+$('#qPlus').addEventListener('click', () => { sheet.qty = Math.min(99, sheet.qty + 1); $('#qVal').textContent = sheet.qty; });
+$('#sAdd').addEventListener('click', () => {
+  const p = byId(sheet.pid); const v = currentVariant(p);
+  if (!v) return toast('Option unavailable');
+  const k = String(v.id);
+  if (!cart[k]) cart[k] = { pid: p.id, vid: v.id, qty: 0 };
+  cart[k].qty += sheet.qty;
+  renderCart(); toast('Added to cart 🛒');
+});
+$('#sBuy').addEventListener('click', () => {
+  const p = byId(sheet.pid); const v = currentVariant(p);
+  if (!v) return;
+  window.open('https://www.xtore.shop/cart/' + v.id + ':' + sheet.qty, '_blank', 'noopener');
+  toast('Opening secure checkout on xtore.shop…');
+});
+$('#sWish').addEventListener('click', () => {
+  const id = sheet.pid;
+  wish.has(id) ? wish.delete(id) : wish.add(id);
+  save(); renderWish(); applyShop(); renderHome(); paintSheet();
+});
+$('#newsBtn').addEventListener('click', () => {
+  const em = $('#newsEmail').value.trim();
+  if (!em || !em.includes('@')) return toast('Enter a valid email to get 10% off');
+  window.open('https://www.xtore.shop', '_blank', 'noopener');
+  toast('Welcome aboard — check xtore.shop for your 10% code 🎉');
+});
+$('#refreshBtn').addEventListener('click', async () => { toast('Refreshing from live store…'); await loadCatalog(true); toast('Catalog updated ✓'); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
+
+/* PWA install */
+let deferred;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault(); deferred = e;
+  const b = $('#installBtn'); b.hidden = false;
+  $('#installNote').textContent = 'This app can be installed — tap the button below.';
+});
+$('#installBtn').addEventListener('click', async () => {
+  if (!deferred) return;
+  deferred.prompt(); await deferred.userChoice; deferred = null;
+  $('#installBtn').hidden = true;
+});
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+}
+
+/* ---------- boot ---------- */
+$('#stockToggle').classList.add('on'); inStockOnly = true;
+loadCatalog();
+</script>
+</body>
+</html>
